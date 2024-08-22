@@ -11,7 +11,7 @@ public:
   ~MutexLock();
   void lock();
   void unlock();
-  pthread_mutex_t *get() { return &mutex_; }
+  pthread_mutex_t *get();
 
 private:
   //互斥信号量
