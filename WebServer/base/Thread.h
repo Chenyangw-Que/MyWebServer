@@ -5,20 +5,6 @@
 #include <pthread.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-// 内存中建一个表存线程信息
-namespace threadData {
-extern __thread pid_t cachePid;
-extern __thread std::string threadName;
-// 返回线程pid
-inline pid_t getpid() {
-  if (__builtin_expect(cachePid == 0, 0)) {
-    cachePid = static_cast<pid_t>(::syscall(SYS_gettid));
-  }
-}
-
-inline std::string getThreadName() { return threadData::threadName; }
-}; // namespace threadData
-
 class thread {
   // 定义线程类无非是要封装基本的线程创建、join等操作
   // 想想需要什么首先线程创建肯定基于pthread_create，需要变量接受threadid，需要线程启动函数，需要传入线程参数

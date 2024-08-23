@@ -9,6 +9,7 @@
 #include <vector>
 class AsyncLogging : noncopyable {
   // 异步写入端用大buffer
+public:
   using Buffer = logBuffer<kLargeBuff>;
   // 异步写入本质上还是去调一个线程去写
 

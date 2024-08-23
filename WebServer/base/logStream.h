@@ -47,43 +47,42 @@ template <int buffer_size> class logBuffer : noncopyable {
 public:
   logBuffer() : size_(0) {
     bzero();
-    curBuffPos = 0;
+    curBuffPos_ = buffer_;
   }
 
   ~logBuffer() {}
 
   void bzero() {
-    char buffer_[buffer_size];
     memset(buffer_, 0, sizeof(buffer_));
   }
   void moveForward(size_t len) {
-    curBuffPos += len;
+    curBuffPos_ += len;
     size_ += len;
   }
   void writebuff(const char *log, int size) {
     if (preserveSize() > size) {
-      memcpy(curBuffPos, log, size);
+      memcpy(curBuffPos_, log, size);
       moveForward(size);
     }
   }
 
-  const char *getBuffer() { return buffer_; }
+  const char *getBuffer() const { return buffer_; }
 
-  char *getCurPos() { return curBuffPos; }
+  char *getCurPos() { return curBuffPos_; }
 
-  int buffSize() { return size_; }
+  int buffSize() const { return size_; }
 
   int preserveSize() { return buffer_size - size_; }
 
   void reset() {
-    curBuffPos = buffer_;
+    curBuffPos_ = buffer_;
     size_ = 0;
   }
 
 private:
   // 要不停往buffer里写东西，要记录下一次可写的位置
   char buffer_[buffer_size];
-  char *curBuffPos;
+  char *curBuffPos_;
   int size_;
 };
 

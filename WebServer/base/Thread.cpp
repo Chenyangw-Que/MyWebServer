@@ -1,6 +1,19 @@
 #include "Thread.h"
 #include <assert.h>
 #include <sys/prctl.h>
+namespace threadData {
+__thread pid_t cachePid = 0;
+__thread const char* threadName;
+// 返回线程pid
+inline pid_t getpid() {
+  if (__builtin_expect(cachePid == 0, 0)) {
+    cachePid = static_cast<pid_t>(::syscall(SYS_gettid));
+  }
+  return cachePid;
+}
+inline const char* getThreadName() { return threadName; }
+} // namespace threadData
+
 thread::thread(const threadFunc &func, const std::string &name)
     : func_(func), threadId_(0), tid_(0), started_(false), joined_(false),
       threadName_(name) {
@@ -46,7 +59,7 @@ void *thread::run(void *args) {
 
 void thread::cacheData() {
   tid_ = threadData::getpid();
-  threadData::threadName = threadName_.empty() ? "Thread" : threadName_;
+  threadData::threadName = threadName_.empty() ? "Thread" : threadName_.c_str();
   // 修改线程名称
   prctl(PR_SET_NAME, threadData::threadName);
 }

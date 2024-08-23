@@ -1,9 +1,9 @@
-// 对外的log接口
 #ifndef LOG_LOGGING_H_
 #define LOG_LOGGING_H_
 
 #define OPEN_LOGGING
-
+// 具体调用这块，首先前端每次写的时候都调用 LOG<<  此时相当于以RAII的风格初始化一个logging（loging里带一个logstream，同时logging能够访问到一个静态的asynclogging指针）
+// logging 构造时会向4kbuffer中预先写入时间和当前文件，之后接受前端内容。logger析构时会将4kbuffer中的内容写入asynclogging里的前端缓冲区
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>

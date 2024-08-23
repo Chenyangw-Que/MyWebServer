@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string>
 #include <algorithm>
+#include<assert.h>
 logStream &logStream::operator<<(char log) {
   buffer_.writebuff(&log, 1);
   return *this;
@@ -21,6 +22,7 @@ logStream &logStream::operator<<(std::string &log) {
   buffer_.writebuff(log.c_str(), log.size());
   return *this;
 }
+
 logStream &logStream::operator<<(bool log) {
   return operator<<(log ? "1" : "0");
 }
@@ -32,13 +34,14 @@ static const char *zero = digits + 9;
 template <typename T> void logStream::IntegerToBuffer(T number) {
   if (buffer_.preserveSize() >= kMaxNumberSize) {
     // 写入buffer
+
     char *cur = buffer_.getCurPos();
     char *buf = cur;
-
+    assert(buf);
     do {
       int index = static_cast<int>(number % 10);
       number /= 10;
-      *buf++ = zero[index];
+      *(buf++) = zero[index];
     } while (number != 0);
 
     if (number < 0) {
@@ -46,7 +49,7 @@ template <typename T> void logStream::IntegerToBuffer(T number) {
     }
     *buf = '\0';
     std::reverse(cur, buf);
-    buffer_.moveForward(buf-cur);
+    buffer_.moveForward(buf - cur);
   }
 }
 
