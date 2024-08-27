@@ -8,7 +8,6 @@
 #include <signal.h>
 #include <unistd.h>
 const int MAX_BUFFER_SIZE = 4096;
-
 int getListenFd(int port) {
   // 输入检测
   if (port < 0 || port > 65535) {
@@ -195,7 +194,7 @@ int sockRead(int fd, std::string &readBuffer) {
 
 //设置NIO非阻塞套接字 read时不管是否读到数据
 //都直接返回，如果是阻塞式，就会等待直到读完数据或超时返回
-int SetSocketNonBlocking(int fd) {
+int setSocketNonBlocking(int fd) {
   int old_flag = fcntl(fd, F_GETFL, 0);
   if (old_flag == -1) {
     return -1;
@@ -214,7 +213,7 @@ int SetSocketNonBlocking(int fd) {
 //启动TCP_NODELAY就禁用了Nagle算法，应用于延时敏感型任务（要求实时性，传输数据量小）
 // TCP默认应用Nagle算法,数据只有在写缓存累计到一定量时(也就是多次写)，才会被发送出去
 // 明星提高了网络利用率，但是增加了延时
-void SetSocketNoDelay(int fd) {
+void setSocketNoDelay(int fd) {
   int enable = 1;
   setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable));
 }
