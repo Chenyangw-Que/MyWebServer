@@ -6,6 +6,7 @@ set(LIB_SRC
     logStream.cpp
     AsyncLogging.cpp
     Logging.cpp
+    socketUtils.cpp
     )
 
 add_library(libserver_base ${LIB_SRC})

@@ -3,8 +3,10 @@
 #include "arpa/inet.h"
 #include "netinet/in.h"
 #include <errno.h>
+#include <fcntl.h>
+#include <netinet/tcp.h>
+#include <signal.h>
 #include <unistd.h>
-
 const int MAX_BUFFER_SIZE = 4096;
 
 int getListenFd(int port) {
@@ -191,3 +193,56 @@ int sockRead(int fd, std::string &readBuffer) {
   return readSum;
 }
 
+//设置NIO非阻塞套接字 read时不管是否读到数据
+//都直接返回，如果是阻塞式，就会等待直到读完数据或超时返回
+int SetSocketNonBlocking(int fd) {
+  int old_flag = fcntl(fd, F_GETFL, 0);
+  if (old_flag == -1) {
+    return -1;
+  }
+
+  int new_flag = old_flag | O_NONBLOCK;
+  if (fcntl(fd, F_SETFL, new_flag) == -1) {
+    return -1;
+  }
+
+  return 0;
+}
+
+// Nagle算法通过减少需要传输的数据包来优化网络（也就是尽可能发送一次发送大块数据），在内核中
+// 数据包的发送接收都会先缓存
+//启动TCP_NODELAY就禁用了Nagle算法，应用于延时敏感型任务（要求实时性，传输数据量小）
+// TCP默认应用Nagle算法,数据只有在写缓存累计到一定量时(也就是多次写)，才会被发送出去
+// 明星提高了网络利用率，但是增加了延时
+void SetSocketNoDelay(int fd) {
+  int enable = 1;
+  setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&enable, sizeof(enable));
+}
+
+//优雅关闭套接字 也就是套接字在close的时候是否等待缓冲区发送完成
+void SetSocketNoLinger(int fd) {
+  struct linger linger_struct;
+  linger_struct.l_onoff = 1;
+  linger_struct.l_linger = 30;
+  setsockopt(fd, SOL_SOCKET, SO_LINGER, (const char *)&linger_struct,
+             sizeof(linger_struct));
+}
+
+// shutdown只关闭了连接 close则关闭了套接字
+// shutdown会等输出缓冲区中的数据传输完毕再发送FIN报文段 而close则直接关闭
+// 将会丢失输出缓冲区的内容
+void ShutDownWR(int fd) {
+  // SHUT_WR断开输出流
+  shutdown(fd, SHUT_WR);
+}
+
+//注册处理管道信号的回调 对其信号屏蔽
+void HandlePipeSignal() {
+  struct sigaction signal_action;
+  memset(&signal_action, '\0', sizeof(signal_action));
+  signal_action.sa_handler = SIG_IGN;
+  signal_action.sa_flags = 0;
+  if (sigaction(SIGPIPE, &signal_action, NULL)) {
+    return;
+  }
+}
