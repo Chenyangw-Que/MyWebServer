@@ -7,6 +7,7 @@ set(LIB_SRC
     AsyncLogging.cpp
     Logging.cpp
     socketUtils.cpp
+    MemoryPool.cpp
     )
 
 add_library(libserver_base ${LIB_SRC})
