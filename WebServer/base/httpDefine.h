@@ -1,6 +1,24 @@
 // 对http解析类型的定义，以及对解析状态机的定义
 #pragma once
+#include <unordered_map>
 namespace httpDefine {
+extern char web_server_favicon[555];
+
+// http mime文件类型
+class MimeType {
+public:
+  static std::string get_mime(const std::string &type);
+
+private:
+  MimeType();
+  MimeType(const MimeType &mime_type);
+
+  static void OnceInit();
+
+private:
+  static std::unordered_map<std::string, std::string> mime_map;
+  static pthread_once_t once_control;
+};
 enum ProcessState {
   STATE_PARSE_LINE,
   STATE_PARSE_HEADERS,

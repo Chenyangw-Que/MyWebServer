@@ -2,23 +2,32 @@
 #include <memory>
 // timerNode负责管理channel，(实际上是通过httpConnection，因为http拥有channel)
 
-// 做一个前置声明
 class httpConnection;
 
+
+//定时器类
 class TimerNode {
 public:
   TimerNode(std::shared_ptr<httpConnection> http, int timeout);
-  TimerNode(const TimerNode &timer);
+  //拷贝构造
+  TimerNode(TimerNode &timer);
   ~TimerNode();
-  void update(int timeout); // 更新超时时间
-  bool isExpired();
-  void release();
-  int expireTime();
-  bool isDeleted();
+
+  //更新到期时间 = 当前时间 + 超时时间
+  void Update(int timeout);
+  //是否到期
+  bool is_expired();
+  //释放http
+  void Release();
+
+  //得到到期时间
+  int expire_time() const { return expire_time_; }
+
+  // http是否已经删除
+  bool is_deleted() const { return is_deleted_; }
 
 private:
-    // 所管理的HttpConnection
-    std::shared_ptr<httpConnection> httpConn_;
-    int expireTime_;
-    bool deleted_;
+  std::shared_ptr<httpConnection> http_connection_;
+  int expire_time_;
+  bool is_deleted_;
 };

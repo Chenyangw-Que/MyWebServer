@@ -44,7 +44,6 @@ Slot *MemoryPool::allocateBlock() {
   Slot *useSlot;
   {
     //MutexLockGuard lock(mutexOther_);
-
     // 将新申请的大块内存连到原有block头部
     reinterpret_cast<Slot *>(newBlock)->next = BlockHead_;
     BlockHead_ = reinterpret_cast<Slot *>(newBlock);

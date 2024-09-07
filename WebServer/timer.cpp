@@ -1,48 +1,65 @@
 #include "timer.h"
+
+#include <sys/time.h>
+#include <unistd.h>
+
+#include <memory>
+#include <queue>
+
 #include "base/Logging.h"
 #include "httpConnection.h"
-#include <memory>
-#include <sys/time.h>
-TimerNode::TimerNode(std::shared_ptr<httpConnection> http, int timeout)
-    : expireTime_(0), httpConn_(http), deleted_(false) {
-  // 计算出一个初始的超时时间，也就是当前时间+超时时间
-  update(timeout);
-}
 
-TimerNode::TimerNode(const TimerNode &timer)
-    : httpConn_(timer.httpConn_), expireTime_(0) {}
 
-TimerNode::~TimerNode() {
-  if (httpConn_) {
-    // 如果不是主动释放
-    LOG(INFO) << "Time out, close fd: " << httpConn_->connectfd();
-    httpConn_->Delete();
-  }
-}
-
-void TimerNode::update(int timeout) {
+TimerNode::TimerNode(std::shared_ptr<httpConnection> http_connection,
+                     int timeout)
+    : http_connection_(http_connection), is_deleted_(false) {
+  // 以毫秒计算 到期时间 = 当前时间(秒余到10000以内换算成毫秒 + 微妙换算成毫秒)
+  // + 超时时间(毫秒)
   struct timeval now;
   gettimeofday(&now, NULL);
-  expireTime_ =
+  expire_time_ =
       (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout;
 }
 
-bool TimerNode::isExpired() {
+// 拷贝构造函数
+TimerNode::TimerNode(TimerNode &timer)
+    : http_connection_(timer.http_connection_), expire_time_(0) {}
+
+// 定时器析构时
+// (如果是因重新绑定新定时器而将此旧定时器删除的情况，http对象reset,所以不会调用Delete)
+// 如果是因为超时而将此定时器删除的情况 就会调用http的Delete(EpollDel,
+// close(fd))
+TimerNode::~TimerNode() {
+  if (http_connection_) {
+    LOG(INFO) << "Timeout, close sockfd: " << http_connection_->connect_fd();
+    http_connection_->Delete();
+  }
+}
+
+// 更新到期时间 = 当前时间 + 超时时间
+void TimerNode::Update(int timeout) {
   struct timeval now;
   gettimeofday(&now, NULL);
-  size_t cur = (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000));
-  if (cur >= expireTime_) {
-    deleted_ = true; // 用于惰性删除
-    return true;     // 标记为删除，却不释放资源
+  expire_time_ =
+      (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000)) + timeout;
+}
+
+// 是否到期
+bool TimerNode::is_expired() {
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  size_t current_time = (((now.tv_sec % 10000) * 1000) + (now.tv_usec / 1000));
+  if (current_time >= expire_time_) {
+    is_deleted_ = true;
+    return true;
   }
+
   return false;
 }
 
-void TimerNode::release() {
-  httpConn_.reset();
-  deleted_ = true;
+// 释放http
+void TimerNode::Release() {
+  http_connection_.reset();
+  is_deleted_ = true;
 }
 
-int TimerNode::expireTime() { return expireTime_; }
-
-bool TimerNode::isDeleted() { return deleted_; }

@@ -10,7 +10,7 @@
 #include "AsyncLogging.h"
 #include "Thread.h"
 
-namespace log {
+
 //异步日志对象 异步日志线程
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 static AsyncLogging* async_logging = nullptr;
@@ -131,4 +131,3 @@ void Logging::Impl::FormatTime() {
     strftime(time_str_, 26, "%Y-%m-%d %H:%M:%S", current_time);
 }
 
-}  // namespace log

@@ -1,79 +1,81 @@
 #include "Channel.h"
-#include "sys/epoll.h"
-Channel::Channel() : fd_(0), events_(0), lastevents_(0) {}
 
-Channel::Channel(int fd) : fd_(fd), events_(0), lastevents_(0) {}
+#include <unistd.h>
+#include <stdlib.h>
+
+#include <iostream>
+#include <queue>
+
+#include "Poller.h"
+#include "EventLoop.h"
+
+
+Channel::Channel() {
+    fd_ = 0;
+    events_ = 0;
+    last_events_ = 0;  
+}
+
+Channel::Channel(int fd) {
+    fd_ = fd;
+    events_ = 0;
+    last_events_ = 0;
+}
 
 Channel::~Channel() {}
 
-void Channel::handleEvents() {
-  events_ = 0;
-  if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)) {
-    // 挂起且无可读事件
+// IO事件的回调函数 EventLoop中调用Loop开始事件循环 会调用Poll得到就绪事件 
+// 然后依次调用此函数处理就绪事件
+void Channel::HandleEvents() {
     events_ = 0;
-    return;
-  }
-  if (revents_ & EPOLLERR) {
-    handleError();
-    events_ = 0;
-    return;
-  }
+    // 触发挂起事件 并且没触发可读事件
+    if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)) {
+        events_ = 0;
+        return;
+    }
+    // 触发错误事件
+    if (revents_ & EPOLLERR) {
+        HandleError();
+        events_ = 0;
+        return;
+    } 
+    // 触发可读事件 | 高优先级可读 | 对端（客户端）关闭连接
+    if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
+        HandleRead();
+    }
+    // 触发可写事件
+    if (revents_ & EPOLLOUT) {
+        HandleWrite();
+    }
 
-  if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
-    handleRead();
-  }
-  if (revents_ & EPOLLOUT) {
-    handleWrite();
-  }
-  handleUpdate();
+    //处理更新监听事件(EpollMod)
+    HandleUpdate();
 }
 
-void Channel::handleRead() {
-  if (readHandler_)
-    readHandler_();
+//处理读事件的回调函数
+void Channel::HandleRead() {
+    if (read_handler_) {
+        read_handler_();
+    }
 }
 
-void Channel::handleWrite() {
-  if (writeHandler_)
-    writeHandler_();
+//处理写事件的回调函数
+void Channel::HandleWrite() {
+    if (write_handler_) {
+        write_handler_();
+    }
 }
 
-void Channel::handleError() {
-  if (errorHander_)
-    errorHander_();
+//处理更新事件的回调
+void Channel::HandleUpdate() {
+    if (update_handler_) {
+        update_handler_();
+    }
 }
 
-void Channel::handleUpdate() {
-  if (updateHander_)
-    updateHander_();
-}
-
-void Channel::setReadHandler(CallBack &&cb) { readHandler_ = cb; }
-void Channel::setWriteHandler(CallBack &&cb) { writeHandler_ = cb; }
-void Channel::setUpdateHandler(CallBack &&cb) { updateHander_ = cb; }
-void Channel::setErrorHandler(CallBack &&cb) { errorHander_ = cb; }
-
-int Channel::fd() const { return fd_; }
-
-void Channel::setfd(int fd) { fd_ = fd; }
-
-void Channel::setEvents(int event) { events_ = event; }
-void Channel::setREvents(int event) { revents_ = event; }
-bool Channel::updateLastEvents() {
-  bool isChange = (lastevents_ == events_);
-  lastevents_ = events_;
-  return isChange;
-}
-
-int &Channel::getEvents() { return events_; }
-
-int Channel::getLastEvents() const { return lastevents_; }
-
-std::shared_ptr<httpConnection> Channel::getHolder_() {
-  std::shared_ptr<httpConnection> http(holder_.lock());
-  return http;
-}
-
-void Channel::setHolder(std::shared_ptr<httpConnection> holder) {
-  holder_ = holder;
+//处理错误事件的回调函数
+void Channel::HandleError() {
+    if (error_handler_) {
+        error_handler_();
+    }
 }

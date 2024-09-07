@@ -11,7 +11,7 @@
 
 #include "logStream.h"
 
-namespace log {
+
 class Logging {
  public:
     Logging(const char* file_name, int line, int level);
@@ -76,7 +76,7 @@ class Logging {
     Impl impl_;
 };
 
-}  // namespace log
+
 
 enum LogLevel {
     DEBUG = 0,
@@ -89,15 +89,15 @@ enum LogLevel {
 //宏定义
 #ifdef OPEN_LOGGING
 
-    #define LOG(level)  log::Logging(__FILE__, __LINE__, level).stream() 
-    #define LOG_DEBUG   log::Logging(__FILE__, __LINE__, DEBUG).stream()
-    #define LOG_INFO    log::Logging(__FILE__, __LINE__, INFO).stream()
-    #define LOG_WARNING log::Logging(__FILE__, __LINE__, WARNING).stream()
-    #define LOG_ERROR   log::Logging(__FILE__, __LINE__, ERROR).stream()
-    #define LOG_FATAL   log::Logging(__FILE__, __LINE__, FATAL).stream()
+    #define LOG(level)  Logging(__FILE__, __LINE__, level).stream() 
+    #define LOG_DEBUG   Logging(__FILE__, __LINE__, DEBUG).stream()
+    #define LOG_INFO    Logging(__FILE__, __LINE__, INFO).stream()
+    #define LOG_WARNING Logging(__FILE__, __LINE__, WARNING).stream()
+    #define LOG_ERROR   Logging(__FILE__, __LINE__, ERROR).stream()
+    #define LOG_FATAL   Logging(__FILE__, __LINE__, FATAL).stream()
 
 #else
-    #define LOG(level) log::LogStream()
+    #define LOG(level) LogStream()
 #endif
 
 #endif  // LOG_LOGGING_H_

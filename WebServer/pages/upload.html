@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Upload an Image</h2>
+<form action="/01upload.cgi" method="post" enctype="multipart/form-data">
+  <input type="file" name="image">
+  <input type="submit" value="Upload Image">
+</form>
+
+
+<form method="post" enctype="multipart/form-data" id="file_upload">
+	<p>Õº∆¨‘§¿¿£∫</p>
+	<img id="image-preview">
+	<p>
+	<input type="file" id="file" name="upload_image" accept="image/gif, image/jpeg, image/png, image/jpg">
+	<input type="button" value="œ¬‘ÿÕº∆¨" onclick="save()" />
+	</p>
+    <p id="info"></p>
+</form>
+</body>
+</html>
+

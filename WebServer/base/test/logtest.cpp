@@ -73,8 +73,8 @@ void other()
 
 int main()
 {
-    log::Logging::set_log_file_name("./weblog.log");
-    log::Logging::set_open_log(true);
+    Logging::set_log_file_name("./weblog.log");
+    Logging::set_open_log(true);
     // 共500014行
     type_test();
     sleep(3);

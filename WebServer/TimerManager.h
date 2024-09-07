@@ -1,35 +1,41 @@
-#pragma once
-// timer管理器
-#include "base/noncopyable.h"
-#include "base/skipList.h"
+#ifndef TIMER_TIMER_HEAP_H_
+#define TIMER_TIMER_HEAP_H_
+
 #include "timer.h"
+
 #include <deque>
 #include <memory>
 #include <queue>
-class httpConnection;
 
-struct cmpMethod {
+#include "base/noncopyable.h"
+
+//类的前置声明
+class HttpConnection;
+
+//定时器比较仿函数 升序
+struct TimerCompare {
   bool operator()(const std::shared_ptr<TimerNode> &a,
                   const std::shared_ptr<TimerNode> &b) const {
-    return a->expireTime() >
-           b->expireTime(); // 建堆过程中的上调操作，当目标节点的父节点大于目标节点，将目标节点上调，建成小根堆
+    return a->expire_time() > b->expire_time();
   }
 };
 
-// 用小根堆管理定时器
+//定时器小根堆
 class TimerHeap : noncopyable {
 public:
   TimerHeap() {}
   ~TimerHeap() {}
-  void pushTimer(std::shared_ptr<httpConnection> httpConn, int timeout);
-  void handleExpireEvent(); // 处理超时事件
+
+  //添加定时器 将其添加到小根堆中
+  void AddTimer(std::shared_ptr<httpConnection> http_connection, int timeout);
+  //处理到期事件 如果定时器被删除或者已经到期 就从小根堆中删除
+  void HandleExpireEvent();
 
 private:
-  // 首先肯定有一个小根堆
-  std::priority_queue<std::shared_ptr<httpConnection>,
-                      std::deque<std::shared_ptr<TimerNode>>, cmpMethod>
-      timerheap_;
+  //优先级队列 小顶堆
+  std::priority_queue<std::shared_ptr<TimerNode>,
+                      std::deque<std::shared_ptr<TimerNode>>, TimerCompare>
+      timer_heap_;
 };
 
-
-// skiplist todo
+#endif // namespace TIMER_TIMER_H_

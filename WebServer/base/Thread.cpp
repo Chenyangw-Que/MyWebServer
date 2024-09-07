@@ -3,7 +3,7 @@
 #include <sys/prctl.h>
 namespace threadData {
 __thread pid_t cachePid = 0;
-__thread const char* threadName;
+__thread const char *threadName;
 // 返回线程pid
 inline pid_t getpid() {
   if (__builtin_expect(cachePid == 0, 0)) {
@@ -11,7 +11,7 @@ inline pid_t getpid() {
   }
   return cachePid;
 }
-inline const char* getThreadName() { return threadName; }
+inline const char *getThreadName() { return threadName; }
 } // namespace threadData
 
 thread::thread(const threadFunc &func, const std::string &name)
