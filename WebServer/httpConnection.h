@@ -14,6 +14,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include "Connection.h"
 //类的前置声明
 
 class Channel;
@@ -21,7 +22,7 @@ class EventLoop;
 
 // std::enable_shared_from_this 当类http被std::shared_ptr管理，
 // 且在类http的成员函数里需要把当前类对象作为参数传给其他函数时，就需要传递一个指向自身的std::shared_ptr
-class  httpConnection : public std::enable_shared_from_this< httpConnection> {
+class  httpConnection : public BaseConnection {
 public:
    httpConnection(EventLoop *event_loop, int connect_fd);
   ~ httpConnection();
@@ -78,8 +79,6 @@ private:
   std::map<std::string, std::string> request_headers_; //请求头字段
   bool is_error_;                                      //是否发生错误
   bool is_keep_alive_;                                 //是否长连接
-
-  struct iovec iobuf[2]; // 专门用于读写大文件(多媒体文件的缓冲区)
 };
 
 #endif // HTTP_HTTP_CONNECTION_H_

@@ -65,6 +65,5 @@ template <typename T> void deleteElement(T *p) {
   if (p)
     p->~T();
   freeMemory(sizeof(T), reinterpret_cast<void *>(p));
-  // printf("deleteElement success\n");
 }
 }

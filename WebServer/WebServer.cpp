@@ -77,7 +77,6 @@ int main(int argc, char* argv[]) {
     Logging::set_color_log_to_stderr(configure::color_log_to_stderr);
     // 设置最小日志等级
     Logging::set_min_log_level(configure::min_log_level);
-
     // 初始化内存池
     QueMemory::init();
     // 初始化缓存
@@ -88,10 +87,7 @@ int main(int argc, char* argv[]) {
 
     // 创建监听套接字绑定服务器，监听端口，设置监听套接字为NIO，屏蔽管道信号
     mainReactor::GetInstance().Initialize(&mainloop, configure::thread_num, configure::port);
-    // server::WebServer myHttpServer(&main_loop, configure::thread_num, configure::port);
     
-    // 主loop创建事件循环线程池(子loop),每个线程都run起来（调用SubLoop::Loop）
-    // 给监听套接字设置监听事件，绑定事件处理回调，注册到主loop的epoll内核事件表中
     mainReactor::GetInstance().Start();
     // myHttpServer.Start();
 
